@@ -1,0 +1,57 @@
+---
+title: 'Reproducible Research: Peer Assessment 1'
+output:
+  html_document:
+    fig_height: 12
+    fig_width: 4
+    keep_md: yes
+  pdf_document: default
+  word_document: default
+---
+
+
+##Loading and preprocessing the data
+###1. Load the data (i.e. `read.csv()` )
+Since we have forked the instructor's repository into our githubs and cloned it locally, we already have the necessary files.  Simply, change the working directory in R Studio, and then unzip and load the file.
+
+```{r, echo=TRUE}
+activitydata<- unzip("activity.zip")
+activitydata<- read.csv("../RepData_PeerAssessment1/activity.csv", header=TRUE, sep= ",")
+```
+
+###2. Process/transform the data (if necessary) into a format suitable for your analysis
+Okay, let's see if we need to fix up the table in anyway using the `str()` function
+
+```{r, echo=FALSE, results="asis"}
+str(activitydata)
+```
+
+Looks like the date colum has class=FACTOR; we should change that to class=Date. I like working with the **lubridate** package but the 'as.date()' should be fine too.
+```{r,echo=TRUE}
+install.packages("lubridate")
+library(lubridate)
+activitydata$date<- ymd(activitydata$date)
+```
+
+##What is the mean total number of steps taken per day?
+###1. Calculate the total number fo steps taken per day
+First, I should calculate the sum for each day, then I can take the mean across the days. I am going to use the **dplyr** package
+```{r, echo=TRUE}
+groupeddata<- group_by(activitydata, date)
+summeddata<- summarise(groupeddata, sum(steps))
+names(summeddata)<- c("date", "total steps")
+```
+or another way to do it is `rowsum(activitydata$steps, activitydata$date)`, where the first argument is the data you want to sum, and the second argument is the 'group_by' argument
+
+###2. Make a histogram of the total number of steps taken each day.
+We can use the 'summeddata' dataframe and the base plotting package:
+```{r, results = "asis"}
+ hist(summeddata$"total steps", breaks=10, main = "Histogram of Total No of Steps by Day")
+```
+
+###3. Calculate and report the mean and median of the total number of steps taken per day
+```{r, echo=TRUE}
+summeddata$"total steps"<- as.numeric(as.integer(summeddata$"total steps"))
+cleansums<- na.omit(summeddata)
+mean<- mean(cleansums$"total steps")
+median<- median(cleansums$"total steps")
